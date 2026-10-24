@@ -5,6 +5,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageId>SqliteForge</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>curvecoder</Authors>
+    <Company>curvecoder</Company>
+    <Description>Resilient SQLite infrastructure for .NET featuring automatic WAL concurrency interception, SQLiteMC/SQLCipher encryption, and dynamic configuration providers.</Description>
+    <RepositoryUrl>https://github.com/curvecoder/SqliteForge</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +22,10 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.*" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3mc" Version="2.1.10" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
 
   <ItemGroup>
