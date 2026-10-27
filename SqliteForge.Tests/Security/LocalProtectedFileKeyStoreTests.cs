@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using FluentAssertions;
+using AwesomeAssertions;
 using SqliteForge.Security;
 using Xunit;
 

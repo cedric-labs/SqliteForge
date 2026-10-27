@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using SqliteForge.Data;
 using SqliteForge.Security;
 using Xunit;
