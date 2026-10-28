@@ -6,7 +6,6 @@
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>SqliteForge</PackageId>
-    <Version>1.0.0</Version>
     <Authors>curvecoder</Authors>
     <Company>curvecoder</Company>
     <Description>Resilient SQLite infrastructure for .NET featuring automatic WAL concurrency interception, SQLiteMC/SQLCipher encryption, and dynamic configuration providers.</Description>
