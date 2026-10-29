@@ -2,7 +2,7 @@
 param(
     [string]$ProjectKey = "SqliteForge",
     [string]$SonarHost = $(if ($env:SONAR_HOST_URL) { $env:SONAR_HOST_URL } else { "http://localhost:9000" }),
-    [string]$SonarToken = $(if ($env:SONAR_TOKEN) { $env:SONAR_TOKEN } else { -join ('sqa_', 'REMOVED-TOKEN') }),
+    [string]$SonarToken = $env:SONAR_TOKEN,
     [switch]$SkipFormat,
     [switch]$SkipSonar
 )
@@ -10,6 +10,10 @@ param(
 $ErrorActionPreference = "Stop"
 $ScriptRoot = $PSScriptRoot
 Set-Location $ScriptRoot
+
+if (-not $SonarToken -and (Test-Path "$ScriptRoot/.sonar-token")) {
+    $SonarToken = (Get-Content "$ScriptRoot/.sonar-token" -Raw).Trim()
+}
 
 Write-Host "==============================================" -ForegroundColor Cyan
 Write-Host "  Quality & SonarQube pipeline - SqliteForge" -ForegroundColor Cyan
