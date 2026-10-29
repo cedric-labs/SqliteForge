@@ -49,7 +49,7 @@ High-performance, resilient SQLite infrastructure library for .NET featuring aut
 Add the package via the .NET CLI:
 
 ```bash
-dotnet add package SqliteForge --version 1.1.0
+dotnet add package SqliteForge --version 1.1.1
 ```
 
 ---
