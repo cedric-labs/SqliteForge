@@ -29,7 +29,7 @@ public sealed class SqliteConfigurationProviderTests : IDisposable
             }
             catch (IOException)
             {
-                // Ignorer le verrou temporaire du système de fichiers lors du nettoyage
+                // A temporary file system lock must not fail the test during cleanup; the folder stays in the temp directory.
             }
         }
     }
@@ -39,8 +39,8 @@ public sealed class SqliteConfigurationProviderTests : IDisposable
     {
         var defaults = new[]
         {
-            new SqliteSettingSeed("App:DefaultCurrency", "EUR", "Devise par défaut"),
-            new SqliteSettingSeed("App:Name", "Fluxa", "Nom de l'application"),
+            new SqliteSettingSeed("App:DefaultCurrency", "EUR", "Default currency"),
+            new SqliteSettingSeed("App:Name", "Fluxa", "Application name"),
             new SqliteSettingSeed("Security:MaxFailedAccessAttempts", "5", "Tentatives max")
         };
 

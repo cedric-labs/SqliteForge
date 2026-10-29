@@ -5,12 +5,12 @@ using Microsoft.Extensions.Configuration;
 namespace SqliteForge.Configuration;
 
 /// <summary>
-/// Fournisseur de configuration personnalisé lisant les paramètres métier et système
-/// directement depuis une table SQLite dédiée (<c>AppSettings</c>).
+/// Configuration provider that reads business and system settings
+/// directly from a dedicated SQLite table (<c>AppSettings</c>).
 /// </summary>
-/// <param name="connectionStringResolver">Fonction résolvant la chaîne de connexion SQLite active.</param>
-/// <param name="defaultSettings">Paramètres initiaux optionnels à insérer si la table est vide.</param>
-/// <param name="onLoadError">Délégué optionnel invoqué lorsqu'une erreur d'accès SQLite survient au chargement.</param>
+/// <param name="connectionStringResolver">Function that resolves the active SQLite connection string.</param>
+/// <param name="defaultSettings">Optional initial settings inserted when the table is empty.</param>
+/// <param name="onLoadError">Optional delegate called when a SQLite access error occurs while loading.</param>
 public class SqliteConfigurationProvider(
     Func<string?> connectionStringResolver,
     IEnumerable<SqliteSettingSeed>? defaultSettings = null,
@@ -19,11 +19,11 @@ public class SqliteConfigurationProvider(
     private readonly Func<string?> _connectionStringResolver = connectionStringResolver ?? throw new ArgumentNullException(nameof(connectionStringResolver));
 
     /// <summary>
-    /// Initialise une nouvelle instance de <see cref="SqliteConfigurationProvider"/> avec une chaîne de connexion statique.
+    /// Creates a <see cref="SqliteConfigurationProvider"/> with a static connection string.
     /// </summary>
-    /// <param name="connectionString">Chaîne de connexion SQLite.</param>
-    /// <param name="defaultSettings">Paramètres initiaux optionnels à insérer si la table est vide.</param>
-    /// <param name="onLoadError">Délégué optionnel invoqué lorsqu'une erreur d'accès SQLite survient au chargement.</param>
+    /// <param name="connectionString">SQLite connection string.</param>
+    /// <param name="defaultSettings">Optional initial settings inserted when the table is empty.</param>
+    /// <param name="onLoadError">Optional delegate called when a SQLite access error occurs while loading.</param>
     public SqliteConfigurationProvider(
         string connectionString,
         IEnumerable<SqliteSettingSeed>? defaultSettings = null,
@@ -60,8 +60,8 @@ public class SqliteConfigurationProvider(
         }
         catch (Exception ex) when (ex is SqliteException or InvalidOperationException or IOException)
         {
-            // En phase initiale de démarrage ou lorsque la base chiffrée est verrouillée,
-            // tolérer l'erreur sans interrompre le démarrage de l'hôte et notifier l'appelant.
+            // During early startup, or while the encrypted database is locked,
+            // the error is tolerated so the host keeps starting, and the caller is notified.
             onLoadError?.Invoke(ex);
         }
 

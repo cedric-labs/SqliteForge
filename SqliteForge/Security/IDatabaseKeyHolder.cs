@@ -1,34 +1,34 @@
 namespace SqliteForge.Security;
 
 /// <summary>
-/// Contrat du détenteur en mémoire de la clé de déchiffrement de la base SQLite.
+/// Holds the SQLite database decryption key in memory.
 /// </summary>
 public interface IDatabaseKeyHolder
 {
     /// <summary>
-    /// Clé ou phrase de passe active de déchiffrement en mémoire.
+    /// Active decryption key or passphrase held in memory.
     /// </summary>
     string? EncryptionKey { get; }
 
     /// <summary>
-    /// Indique si le fichier physique SQLite est chiffré.
+    /// Indicates whether the SQLite database file is encrypted.
     /// </summary>
     bool IsDatabaseEncrypted { get; }
 
     /// <summary>
-    /// Indique si la base est déverrouillée et prête pour les lectures/écritures.
+    /// Indicates whether the database is unlocked and ready for reads and writes.
     /// </summary>
     bool IsUnlocked { get; }
 
     /// <summary>
-    /// Met à jour la clé active et l'état de chiffrement.
+    /// Updates the active key and the encryption state.
     /// </summary>
-    /// <param name="key">Clé ou phrase de passe de déchiffrement.</param>
-    /// <param name="isEncrypted">Indique si la base est chiffrée.</param>
+    /// <param name="key">Decryption key or passphrase.</param>
+    /// <param name="isEncrypted">Whether the database is encrypted.</param>
     void SetKey(string? key, bool isEncrypted);
 
     /// <summary>
-    /// Réinitialise la clé en mémoire.
+    /// Clears the key held in memory.
     /// </summary>
     void Clear();
 }

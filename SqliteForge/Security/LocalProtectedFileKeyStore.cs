@@ -4,12 +4,12 @@ using System.Text;
 namespace SqliteForge.Security;
 
 /// <summary>
-/// Stockage local sécurisé de la clé SQLite pour la fonction "Se souvenir sur cet appareil".
-/// Sur Windows, utilise l'API DPAPI (<c>ProtectedData</c> avec <c>DataProtectionScope.CurrentUser</c>).
-/// Sur Linux / macOS, utilise un chiffrement AES-256 avec vecteur d'initialisation préfixé.
+/// Local protected storage of the SQLite key for the "Remember on this device" feature.
+/// On Windows it uses DPAPI (<c>ProtectedData</c> with <c>DataProtectionScope.CurrentUser</c>).
+/// On Linux and macOS it uses AES-256 encryption with a prefixed initialization vector.
 /// </summary>
-/// <param name="customPath">Chemin personnalisé optionnel du fichier de clé.</param>
-/// <param name="applicationName">Nom du sous-dossier applicatif dans <c>LocalApplicationData</c> lorsque <paramref name="customPath"/> n'est pas fourni.</param>
+/// <param name="customPath">Optional custom path of the key file.</param>
+/// <param name="applicationName">Name of the application subfolder in <c>LocalApplicationData</c> when <paramref name="customPath"/> is not given.</param>
 public class LocalProtectedFileKeyStore(string? customPath = null, string applicationName = "Fluxa") : IDatabaseKeyStore
 {
     private static readonly byte[] Entropy = Encoding.UTF8.GetBytes("Fluxa-Sqlite3MC-DeviceBinding-v1");
@@ -21,9 +21,9 @@ public class LocalProtectedFileKeyStore(string? customPath = null, string applic
             "dbkey.dat");
 
     /// <summary>
-    /// Récupère de façon synchrone la phrase de passe sauvegardée, ou <c>null</c> si absente ou non déchiffrable.
+    /// Synchronously gets the saved passphrase, or <c>null</c> when it is missing or cannot be decrypted.
     /// </summary>
-    /// <returns>La phrase de passe déchiffrée ou <c>null</c>.</returns>
+    /// <returns>The decrypted passphrase, or <c>null</c>.</returns>
     public string? GetSavedKey()
     {
         try
@@ -53,16 +53,16 @@ public class LocalProtectedFileKeyStore(string? customPath = null, string applic
         }
         catch (Exception ex) when (ex is CryptographicException or IOException or UnauthorizedAccessException)
         {
-            // En cas d'incompatibilité (ex: machine reformatée ou clé corrompue),
-            // retourner null pour forcer la saisie manuelle de la phrase de passe.
+            // When the key cannot be read back (for example a reinstalled machine or a corrupted key),
+            // null makes the caller ask for the passphrase again.
             return null;
         }
     }
 
     /// <summary>
-    /// Sauvegarde de façon synchrone la phrase de passe sur cet appareil.
+    /// Synchronously saves the passphrase on this device.
     /// </summary>
-    /// <param name="key">Phrase de passe à persister.</param>
+    /// <param name="key">Passphrase to save.</param>
     public void SaveKey(string key)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
@@ -89,7 +89,7 @@ public class LocalProtectedFileKeyStore(string? customPath = null, string applic
     }
 
     /// <summary>
-    /// Supprime de façon synchrone la phrase de passe mémorisée sur cet appareil.
+    /// Synchronously deletes the passphrase remembered on this device.
     /// </summary>
     public void ClearSavedKey()
     {
@@ -102,7 +102,7 @@ public class LocalProtectedFileKeyStore(string? customPath = null, string applic
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            // Tolérance idempotente si le fichier de clé est déjà supprimé ou verrouillé par l'OS
+            // Deleting stays idempotent: a key file already gone or locked by the OS is not an error for the caller
         }
     }
 
@@ -137,10 +137,10 @@ public class LocalProtectedFileKeyStore(string? customPath = null, string applic
     }
 
     /// <summary>
-    /// Chiffre les octets fournis via AES-256 avec vecteur d'initialisation préfixé (mécanisme de repli hors Windows).
+    /// Encrypts the bytes with AES-256 and a prefixed initialization vector (fallback outside Windows).
     /// </summary>
-    /// <param name="plainBytes">Données en clair.</param>
-    /// <returns>Données chiffrées préfixées par l'IV de 16 octets.</returns>
+    /// <param name="plainBytes">Plain data.</param>
+    /// <returns>Encrypted data prefixed with the 16-byte IV.</returns>
     protected static byte[] EncryptFallback(byte[] plainBytes)
     {
         ArgumentNullException.ThrowIfNull(plainBytes);
@@ -151,7 +151,7 @@ public class LocalProtectedFileKeyStore(string? customPath = null, string applic
         using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
         var cipherText = encryptor.TransformFinalBlock(plainBytes, 0, plainBytes.Length);
 
-        // Préfixer le vecteur d'initialisation (IV) de 16 octets au texte chiffré
+        // The 16-byte initialization vector (IV) is stored in front of the cipher text
         var result = new byte[aes.IV.Length + cipherText.Length];
         Buffer.BlockCopy(aes.IV, 0, result, 0, aes.IV.Length);
         Buffer.BlockCopy(cipherText, 0, result, aes.IV.Length, cipherText.Length);
@@ -159,10 +159,10 @@ public class LocalProtectedFileKeyStore(string? customPath = null, string applic
     }
 
     /// <summary>
-    /// Déchiffre les octets fournis via AES-256 en extrayant le vecteur d'initialisation préfixé.
+    /// Decrypts the bytes with AES-256, reading the prefixed initialization vector.
     /// </summary>
-    /// <param name="cipherData">Données chiffrées préfixées par l'IV de 16 octets.</param>
-    /// <returns>Données déchiffrées.</returns>
+    /// <param name="cipherData">Encrypted data prefixed with the 16-byte IV.</param>
+    /// <returns>Decrypted data.</returns>
     protected static byte[] DecryptFallback(byte[] cipherData)
     {
         ArgumentNullException.ThrowIfNull(cipherData);
@@ -172,7 +172,7 @@ public class LocalProtectedFileKeyStore(string? customPath = null, string applic
         var iv = new byte[16];
         if (cipherData.Length < iv.Length)
         {
-            throw new CryptographicException("Données chiffrées invalides.");
+            throw new CryptographicException("Invalid encrypted data.");
         }
 
         Buffer.BlockCopy(cipherData, 0, iv, 0, iv.Length);

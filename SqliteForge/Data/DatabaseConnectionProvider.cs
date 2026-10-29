@@ -4,10 +4,10 @@ using SqliteForge.Security;
 namespace SqliteForge.Data;
 
 /// <summary>
-/// Implémentation du fournisseur dynamique de chaîne de connexion SQLite.
+/// Builds the SQLite connection string, adding the active decryption key.
 /// </summary>
-/// <param name="baseConnectionString">Chaîne de connexion SQLite de base.</param>
-/// <param name="keyHolder">Détenteur en mémoire de la clé de déchiffrement.</param>
+/// <param name="baseConnectionString">Base SQLite connection string.</param>
+/// <param name="keyHolder">In-memory holder of the decryption key.</param>
 public class DatabaseConnectionProvider(string baseConnectionString, IDatabaseKeyHolder keyHolder) : IDatabaseConnectionProvider
 {
     private readonly string _databaseFilePath = ResolveDatabaseFilePath(baseConnectionString);

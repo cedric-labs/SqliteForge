@@ -61,7 +61,7 @@ public sealed class SqliteDatabaseEncryptionServiceTests : IDisposable
         }
         catch (IOException)
         {
-            // Ignorer le verrou temporaire du système de fichiers lors du nettoyage
+            // A temporary file system lock must not fail the test during cleanup; the folder stays in the temp directory.
         }
     }
 
@@ -142,14 +142,14 @@ public sealed class SqliteDatabaseEncryptionServiceTests : IDisposable
     {
         var (success1, error1) = await _service.EncryptDatabaseAsync("short", rememberOnDevice: false);
         success1.Should().BeFalse();
-        error1.Should().Contain("8 caractères");
+        error1.Should().Contain("8 characters");
 
         var (success2, _) = await _service.EncryptDatabaseAsync(string.Empty, rememberOnDevice: false);
         success2.Should().BeFalse();
 
         var (success3, error3) = await _service.EncryptDatabaseAsync("LineBreak\nPass123", rememberOnDevice: false);
         success3.Should().BeFalse();
-        error3.Should().Contain("retour à la ligne");
+        error3.Should().Contain("line break");
     }
 
     [Fact]
@@ -169,17 +169,17 @@ public sealed class SqliteDatabaseEncryptionServiceTests : IDisposable
     {
         var (s1, e1) = await _service.ChangePassphraseAsync("current", "short", false);
         s1.Should().BeFalse();
-        e1.Should().Contain("n'est pas chiffrée");
+        e1.Should().Contain("is not encrypted");
 
         _keyHolder.SetKey("ValidOldPassword123!", isEncrypted: true);
 
         var (s2, e2) = await _service.ChangePassphraseAsync("WrongCurrentPassword", "ValidNewPassword123!", false);
         s2.Should().BeFalse();
-        e2.Should().Contain("incorrecte");
+        e2.Should().Contain("is wrong");
 
         var (s3, e3) = await _service.DecryptDatabaseToPlainAsync("WrongPassphrase");
         s3.Should().BeFalse();
-        e3.Should().Contain("incorrecte");
+        e3.Should().Contain("is wrong");
 
         var unlockEmpty = await _service.UnlockDatabaseAsync("   ", false);
         unlockEmpty.Should().BeFalse();

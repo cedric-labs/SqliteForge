@@ -7,15 +7,15 @@ using SqliteForge.Data;
 namespace SqliteForge.Security;
 
 /// <summary>
-/// Service gérant le cycle de vie du chiffrement SQLite avec SQLite3 Multiple Ciphers / SQLCipher.
+/// Manages the SQLite encryption life cycle with SQLite3 Multiple Ciphers / SQLCipher.
 /// </summary>
-/// <param name="connectionProvider">Fournisseur dynamique de chaîne de connexion.</param>
-/// <param name="keyHolder">Détenteur en mémoire de la clé de déchiffrement.</param>
-/// <param name="keyStore">Magasin de persistance locale de la clé.</param>
-/// <param name="serviceProvider">Fournisseur de services applicatifs.</param>
-/// <param name="logger">Journaliseur structuré.</param>
-/// <param name="configuration">Instance de configuration à recharger après déverrouillage.</param>
-/// <param name="onUnlockedCallback">Action asynchrone optionnelle exécutée après déverrouillage réussi de la base.</param>
+/// <param name="connectionProvider">Connection string provider.</param>
+/// <param name="keyHolder">In-memory holder of the decryption key.</param>
+/// <param name="keyStore">Local store of the key.</param>
+/// <param name="serviceProvider">Application service provider.</param>
+/// <param name="logger">Structured logger.</param>
+/// <param name="configuration">Configuration instance reloaded after unlocking.</param>
+/// <param name="onUnlockedCallback">Optional asynchronous action run once the database is unlocked.</param>
 public class SqliteDatabaseEncryptionService(
     IDatabaseConnectionProvider connectionProvider,
     IDatabaseKeyHolder keyHolder,
@@ -59,7 +59,7 @@ public class SqliteDatabaseEncryptionService(
         var isValid = VerifyPassphrase(passphrase);
         if (!isValid)
         {
-            _logger.LogWarning("Échec du déverrouillage de la base de données : phrase de passe incorrecte.");
+            _logger.LogWarning("Database unlock failed: wrong passphrase.");
             return false;
         }
 
@@ -87,12 +87,12 @@ public class SqliteDatabaseEncryptionService(
                 root.Reload();
             }
 
-            _logger.LogInformation("Base de données SQLite déverrouillée avec succès.");
+            _logger.LogInformation("SQLite database unlocked.");
             return true;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogError(ex, "Erreur lors de l'initialisation de la base après déverrouillage.");
+            _logger.LogError(ex, "Database initialization failed after unlocking.");
             return false;
         }
     }
@@ -111,19 +111,19 @@ public class SqliteDatabaseEncryptionService(
 
         if (_keyHolder.IsDatabaseEncrypted)
         {
-            return (false, "La base de données est déjà chiffrée. Utilisez la fonction de modification du mot de passe (rekey).");
+            return (false, "The database is already encrypted. Use the passphrase change (rekey) instead.");
         }
 
         try
         {
             await ApplyRekeyAndPersistStateAsync(newPassphrase, isEncrypted: true, rememberOnDevice, cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation("Chiffrement global de la base de données SQLite activé avec succès.");
+            _logger.LogInformation("SQLite database encryption turned on.");
             return (true, null);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogError(ex, "Erreur lors de l'activation du chiffrement de la base SQLite.");
-            return (false, $"Erreur lors de l'activation du chiffrement: {ex.Message}");
+            _logger.LogError(ex, "Turning on SQLite database encryption failed.");
+            return (false, $"Turning on encryption failed: {ex.Message}");
         }
     }
 
@@ -136,12 +136,12 @@ public class SqliteDatabaseEncryptionService(
     {
         if (!_keyHolder.IsDatabaseEncrypted)
         {
-            return (false, "La base de données n'est pas chiffrée.");
+            return (false, "The database is not encrypted.");
         }
 
         if (!VerifyPassphrase(currentPassphrase))
         {
-            return (false, "La phrase de passe actuelle est incorrecte.");
+            return (false, "The current passphrase is wrong.");
         }
 
         var validation = ValidatePassphrase(newPassphrase);
@@ -153,13 +153,13 @@ public class SqliteDatabaseEncryptionService(
         try
         {
             await ApplyRekeyAndPersistStateAsync(newPassphrase, isEncrypted: true, rememberOnDevice, cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation("Phrase de passe de la base de données modifiée avec succès.");
+            _logger.LogInformation("Database passphrase changed.");
             return (true, null);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogError(ex, "Erreur lors de la modification de la phrase de passe SQLite.");
-            return (false, $"Erreur lors de la modification de la phrase de passe: {ex.Message}");
+            _logger.LogError(ex, "Changing the SQLite passphrase failed.");
+            return (false, $"Changing the passphrase failed: {ex.Message}");
         }
     }
 
@@ -170,24 +170,24 @@ public class SqliteDatabaseEncryptionService(
     {
         if (!_keyHolder.IsDatabaseEncrypted)
         {
-            return (false, "La base de données n'est pas chiffrée.");
+            return (false, "The database is not encrypted.");
         }
 
         if (!VerifyPassphrase(currentPassphrase))
         {
-            return (false, "La phrase de passe actuelle est incorrecte.");
+            return (false, "The current passphrase is wrong.");
         }
 
         try
         {
             await ApplyRekeyAndPersistStateAsync(null, isEncrypted: false, rememberOnDevice: false, cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation("Chiffrement retiré : la base de données est désormais en texte brut.");
+            _logger.LogInformation("Encryption removed: the database is now stored in plain text.");
             return (true, null);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogError(ex, "Erreur lors du retrait du chiffrement SQLite.");
-            return (false, $"Erreur lors du retrait du chiffrement: {ex.Message}");
+            _logger.LogError(ex, "Removing SQLite encryption failed.");
+            return (false, $"Removing encryption failed: {ex.Message}");
         }
     }
 
@@ -213,11 +213,11 @@ public class SqliteDatabaseEncryptionService(
     }
 
     /// <summary>
-    /// Détecte si un fichier physique SQLite est chiffré en analysant son en-tête de 16 octets.
-    /// Un fichier SQLite non chiffré débute impérativement par <c>SQLite format 3\0</c>.
+    /// Detects whether a SQLite file is encrypted by reading its 16-byte header.
+    /// An unencrypted SQLite file always starts with <c>SQLite format 3\0</c>.
     /// </summary>
-    /// <param name="filePath">Chemin du fichier SQLite à inspecter.</param>
-    /// <returns><c>true</c> si le fichier existe et est chiffré ; sinon, <c>false</c>.</returns>
+    /// <param name="filePath">Path of the SQLite file to inspect.</param>
+    /// <returns><c>true</c> when the file exists and is encrypted; otherwise <c>false</c>.</returns>
     public static bool CheckIfFileEncrypted(string filePath)
     {
         if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
@@ -244,40 +244,40 @@ public class SqliteDatabaseEncryptionService(
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            // Tolérer l'impossibilité temporaire de lire l'en-tête et considérer non chiffré par défaut
+            // A header that cannot be read for now (file locked) is treated as unencrypted; the next check reads it again
             return false;
         }
     }
 
     /// <summary>
-    /// Vérifie si une phrase de passe permet de déchiffrer et d'interroger la base de données.
+    /// Checks whether a passphrase decrypts the database and lets it be queried.
     /// </summary>
-    /// <param name="baseConnectionString">Chaîne de connexion de base.</param>
-    /// <param name="passphrase">Phrase de passe à vérifier.</param>
-    /// <returns><c>true</c> si la connexion et la lecture de <c>sqlite_master</c> réussissent ; sinon, <c>false</c>.</returns>
+    /// <param name="baseConnectionString">Base connection string.</param>
+    /// <param name="passphrase">Passphrase to check.</param>
+    /// <returns><c>true</c> when the connection and the read of <c>sqlite_master</c> succeed; otherwise <c>false</c>.</returns>
     public static bool VerifyPassphrase(string baseConnectionString, string passphrase) =>
         VerifyPassphraseInternal(baseConnectionString, passphrase);
 
     /// <summary>
-    /// Valide le respect des contraintes minimales de sécurité d'une phrase de passe SQLite.
+    /// Checks that a SQLite passphrase meets the minimum security rules.
     /// </summary>
-    /// <param name="passphrase">Phrase de passe à contrôler.</param>
-    /// <returns>Un tuple indiquant la validité et le message d'erreur associé.</returns>
+    /// <param name="passphrase">Passphrase to check.</param>
+    /// <returns>A tuple with the validity and the matching error message.</returns>
     public static (bool IsValid, string? ErrorMessage) ValidatePassphrase(string passphrase)
     {
         if (string.IsNullOrWhiteSpace(passphrase))
         {
-            return (false, "La phrase de passe ne peut pas être vide.");
+            return (false, "The passphrase cannot be empty.");
         }
 
         if (passphrase.Length < 8)
         {
-            return (false, "La phrase de passe doit contenir au moins 8 caractères.");
+            return (false, "The passphrase must contain at least 8 characters.");
         }
 
         if (passphrase.Contains('\n', StringComparison.Ordinal) || passphrase.Contains('\r', StringComparison.Ordinal))
         {
-            return (false, "La phrase de passe ne peut pas contenir de retour à la ligne.");
+            return (false, "The passphrase cannot contain a line break.");
         }
 
         return (true, null);
@@ -351,7 +351,7 @@ public class SqliteDatabaseEncryptionService(
         }
         catch (Exception ex) when (ex is SqliteException or ArgumentException or InvalidOperationException)
         {
-            // Une exception SQLite (ex: SQLITE_NOTADB = 26) indique que la clé de déchiffrement est invalide
+            // A SQLite exception (for example SQLITE_NOTADB = 26) means the decryption key is wrong
             return false;
         }
     }

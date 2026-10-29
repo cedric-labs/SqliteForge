@@ -1,77 +1,77 @@
 namespace SqliteForge.Security;
 
 /// <summary>
-/// Service de gestion du chiffrement global de la base SQLite (SQLCipher / SQLite3 Multiple Ciphers).
+/// Manages whole-database encryption of SQLite (SQLCipher / SQLite3 Multiple Ciphers).
 /// </summary>
 public interface IDatabaseEncryptionService
 {
     /// <summary>
-    /// Indique si la base de données physique SQLite est actuellement chiffrée.
+    /// Indicates whether the SQLite database file is encrypted.
     /// </summary>
-    /// <returns><c>true</c> si la base est chiffrée ; sinon, <c>false</c>.</returns>
+    /// <returns><c>true</c> when the database is encrypted; otherwise <c>false</c>.</returns>
     bool IsDatabaseEncrypted();
 
     /// <summary>
-    /// Indique si la base de données est chiffrée et verrouillée (en attente du mot de passe maître).
+    /// Indicates whether the database is encrypted and locked (waiting for the master passphrase).
     /// </summary>
-    /// <returns><c>true</c> si la base est verrouillée ; sinon, <c>false</c>.</returns>
+    /// <returns><c>true</c> when the database is locked; otherwise <c>false</c>.</returns>
     bool IsDatabaseLocked();
 
     /// <summary>
-    /// Vérifie si une phrase de passe permet de déchiffrer la base de données.
+    /// Checks whether a passphrase decrypts the database.
     /// </summary>
-    /// <param name="passphrase">Phrase de passe à vérifier.</param>
-    /// <returns><c>true</c> si la phrase de passe est valide ; sinon, <c>false</c>.</returns>
+    /// <param name="passphrase">Passphrase to check.</param>
+    /// <returns><c>true</c> when the passphrase is valid; otherwise <c>false</c>.</returns>
     bool VerifyPassphrase(string passphrase);
 
     /// <summary>
-    /// Déverrouille la base de données au démarrage ou après verrouillage.
+    /// Unlocks the database at startup or after it was locked.
     /// </summary>
-    /// <param name="passphrase">Phrase de passe maître.</param>
-    /// <param name="rememberOnDevice">Indique s'il faut mémoriser la clé sur cet appareil.</param>
-    /// <param name="cancellationToken">Jeton d'annulation coopérative.</param>
-    /// <returns><c>true</c> si le déverrouillage a réussi ; sinon, <c>false</c>.</returns>
+    /// <param name="passphrase">Master passphrase.</param>
+    /// <param name="rememberOnDevice">Whether the key is remembered on this device.</param>
+    /// <param name="cancellationToken">Cooperative cancellation token.</param>
+    /// <returns><c>true</c> when the database was unlocked; otherwise <c>false</c>.</returns>
     Task<bool> UnlockDatabaseAsync(string passphrase, bool rememberOnDevice, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Chiffre pour la première fois une base de données existante non chiffrée.
+    /// Encrypts an existing unencrypted database for the first time.
     /// </summary>
-    /// <param name="newPassphrase">Nouvelle phrase de passe maître.</param>
-    /// <param name="rememberOnDevice">Indique s'il faut mémoriser la clé sur cet appareil.</param>
-    /// <param name="cancellationToken">Jeton d'annulation coopérative.</param>
-    /// <returns>Résultat de l'opération et message d'erreur éventuel.</returns>
+    /// <param name="newPassphrase">New master passphrase.</param>
+    /// <param name="rememberOnDevice">Whether the key is remembered on this device.</param>
+    /// <param name="cancellationToken">Cooperative cancellation token.</param>
+    /// <returns>The outcome of the operation and the error message, if any.</returns>
     Task<(bool Success, string? ErrorMessage)> EncryptDatabaseAsync(string newPassphrase, bool rememberOnDevice, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Modifie la phrase de passe de chiffrement de la base (opération <c>PRAGMA rekey</c>).
+    /// Changes the database encryption passphrase (<c>PRAGMA rekey</c>).
     /// </summary>
-    /// <param name="currentPassphrase">Phrase de passe actuelle.</param>
-    /// <param name="newPassphrase">Nouvelle phrase de passe.</param>
-    /// <param name="rememberOnDevice">Indique s'il faut mémoriser la nouvelle clé sur cet appareil.</param>
-    /// <param name="cancellationToken">Jeton d'annulation coopérative.</param>
-    /// <returns>Résultat de l'opération et message d'erreur éventuel.</returns>
+    /// <param name="currentPassphrase">Current passphrase.</param>
+    /// <param name="newPassphrase">New passphrase.</param>
+    /// <param name="rememberOnDevice">Whether the new key is remembered on this device.</param>
+    /// <param name="cancellationToken">Cooperative cancellation token.</param>
+    /// <returns>The outcome of the operation and the error message, if any.</returns>
     Task<(bool Success, string? ErrorMessage)> ChangePassphraseAsync(string currentPassphrase, string newPassphrase, bool rememberOnDevice, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Retire le chiffrement pour restaurer la base au format SQLite standard non chiffré.
+    /// Removes the encryption and restores the database to the standard unencrypted SQLite format.
     /// </summary>
-    /// <param name="currentPassphrase">Phrase de passe actuelle.</param>
-    /// <param name="cancellationToken">Jeton d'annulation coopérative.</param>
-    /// <returns>Résultat de l'opération et message d'erreur éventuel.</returns>
+    /// <param name="currentPassphrase">Current passphrase.</param>
+    /// <param name="cancellationToken">Cooperative cancellation token.</param>
+    /// <returns>The outcome of the operation and the error message, if any.</returns>
     Task<(bool Success, string? ErrorMessage)> DecryptDatabaseToPlainAsync(string currentPassphrase, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Indique si la mémorisation sur cet appareil est active.
+    /// Indicates whether the key is remembered on this device.
     /// </summary>
-    /// <param name="cancellationToken">Jeton d'annulation coopérative.</param>
-    /// <returns><c>true</c> si la mémorisation est active ; sinon, <c>false</c>.</returns>
+    /// <param name="cancellationToken">Cooperative cancellation token.</param>
+    /// <returns><c>true</c> when the key is remembered; otherwise <c>false</c>.</returns>
     Task<bool> IsRememberOnDeviceEnabledAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Active ou désactive la mémorisation sur cet appareil avec la clé en mémoire.
+    /// Turns remembering the in-memory key on this device on or off.
     /// </summary>
-    /// <param name="remember"><c>true</c> pour mémoriser la clé ; <c>false</c> pour l'effacer.</param>
-    /// <param name="cancellationToken">Jeton d'annulation coopérative.</param>
-    /// <returns>Tâche asynchrone.</returns>
+    /// <param name="remember"><c>true</c> to remember the key; <c>false</c> to erase it.</param>
+    /// <param name="cancellationToken">Cooperative cancellation token.</param>
+    /// <returns>A task that completes when the setting is saved.</returns>
     Task SetRememberOnDeviceAsync(bool remember, CancellationToken cancellationToken = default);
 }

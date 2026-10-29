@@ -1,31 +1,31 @@
 namespace SqliteForge.Data;
 
 /// <summary>
-/// Fournisseur dynamique de chaîne de connexion SQLite intégrant la clé de déchiffrement active.
+/// Provides the SQLite connection string, including the active decryption key.
 /// </summary>
 public interface IDatabaseConnectionProvider
 {
     /// <summary>
-    /// Retourne la chaîne de connexion effective (avec mot de passe si la base est chiffrée).
+    /// Returns the effective connection string (with the password when the database is encrypted).
     /// </summary>
-    /// <returns>Chaîne de connexion SQLite prête à l'emploi.</returns>
+    /// <returns>A ready-to-use SQLite connection string.</returns>
     string GetConnectionString();
 
     /// <summary>
-    /// Retourne le chemin physique absolu du fichier SQLite de base de données.
+    /// Returns the absolute path of the SQLite database file.
     /// </summary>
-    /// <returns>Chemin absolu du fichier ou <c>:memory:</c>.</returns>
+    /// <returns>Absolute file path, or <c>:memory:</c>.</returns>
     string GetDatabaseFilePath();
 
     /// <summary>
-    /// Indique si la base de données SQLite est chiffrée.
+    /// Indicates whether the SQLite database is encrypted.
     /// </summary>
-    /// <returns><c>true</c> si la base est chiffrée ; sinon, <c>false</c>.</returns>
+    /// <returns><c>true</c> when the database is encrypted; otherwise <c>false</c>.</returns>
     bool IsDatabaseEncrypted();
 
     /// <summary>
-    /// Indique si la base est actuellement verrouillée (chiffrée sans clé valide en mémoire).
+    /// Indicates whether the database is locked (encrypted with no valid key in memory).
     /// </summary>
-    /// <returns><c>true</c> si la base est verrouillée ; sinon, <c>false</c>.</returns>
+    /// <returns><c>true</c> when the database is locked; otherwise <c>false</c>.</returns>
     bool IsDatabaseLocked();
 }

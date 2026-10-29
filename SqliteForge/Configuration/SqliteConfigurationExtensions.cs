@@ -3,18 +3,18 @@ using Microsoft.Extensions.Configuration;
 namespace SqliteForge.Configuration;
 
 /// <summary>
-/// Méthodes d'extension pour enregistrer le fournisseur de configuration SQLite sur un <see cref="IConfigurationBuilder"/>.
+/// Extension methods that register the SQLite configuration provider on an <see cref="IConfigurationBuilder"/>.
 /// </summary>
 public static class SqliteConfigurationExtensions
 {
     /// <summary>
-    /// Ajoute une source de configuration SQLite utilisant une chaîne de connexion statique.
+    /// Adds a SQLite configuration source that uses a static connection string.
     /// </summary>
-    /// <param name="builder">Constructeur de configuration.</param>
-    /// <param name="connectionString">Chaîne de connexion SQLite.</param>
-    /// <param name="defaultSettings">Paramètres initiaux optionnels à insérer si la table est vide.</param>
-    /// <param name="onLoadError">Délégué optionnel invoqué lorsqu'une erreur d'accès SQLite survient au chargement.</param>
-    /// <returns>Le constructeur de configuration enrichi.</returns>
+    /// <param name="builder">Configuration builder.</param>
+    /// <param name="connectionString">SQLite connection string.</param>
+    /// <param name="defaultSettings">Optional initial settings inserted when the table is empty.</param>
+    /// <param name="onLoadError">Optional delegate called when a SQLite access error occurs while loading.</param>
+    /// <returns>The configuration builder, with the source added.</returns>
     public static IConfigurationBuilder AddSqliteConfiguration(
         this IConfigurationBuilder builder,
         string connectionString,
@@ -26,13 +26,13 @@ public static class SqliteConfigurationExtensions
     }
 
     /// <summary>
-    /// Ajoute une source de configuration SQLite utilisant un résolveur dynamique de chaîne de connexion.
+    /// Adds a SQLite configuration source that resolves its connection string on each load.
     /// </summary>
-    /// <param name="builder">Constructeur de configuration.</param>
-    /// <param name="connectionStringResolver">Fonction résolvant la chaîne de connexion SQLite active.</param>
-    /// <param name="defaultSettings">Paramètres initiaux optionnels à insérer si la table est vide.</param>
-    /// <param name="onLoadError">Délégué optionnel invoqué lorsqu'une erreur d'accès SQLite survient au chargement.</param>
-    /// <returns>Le constructeur de configuration enrichi.</returns>
+    /// <param name="builder">Configuration builder.</param>
+    /// <param name="connectionStringResolver">Function that resolves the active SQLite connection string.</param>
+    /// <param name="defaultSettings">Optional initial settings inserted when the table is empty.</param>
+    /// <param name="onLoadError">Optional delegate called when a SQLite access error occurs while loading.</param>
+    /// <returns>The configuration builder, with the source added.</returns>
     public static IConfigurationBuilder AddSqliteConfiguration(
         this IConfigurationBuilder builder,
         Func<string?> connectionStringResolver,

@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 namespace SqliteForge.Data;
 
 /// <summary>
-/// Intercepteur EF Core garantissant l'activation systématique du mode WAL (Write-Ahead Logging),
-/// du busy_timeout et des clés étrangères pour chaque ouverture de connexion SQLite.
-/// Ce mode permet des lectures concurrentes non bloquantes par rapport aux écritures.
+/// EF Core interceptor that turns on WAL (Write-Ahead Logging),
+/// busy_timeout and foreign keys each time a SQLite connection opens.
+/// WAL lets reads run concurrently without being blocked by writes.
 /// </summary>
 public class SqliteWalConnectionInterceptor : DbConnectionInterceptor
 {
@@ -46,7 +46,7 @@ public class SqliteWalConnectionInterceptor : DbConnectionInterceptor
         }
         catch (Microsoft.Data.Sqlite.SqliteException ex) when (ex.SqliteErrorCode == 8)
         {
-            // Ignorer si la connexion est en mode lecture seule (code SQLITE_READONLY = 8)
+            // A read-only connection (SQLITE_READONLY = 8) cannot switch to WAL; it keeps its journal mode
         }
     }
 
@@ -60,7 +60,7 @@ public class SqliteWalConnectionInterceptor : DbConnectionInterceptor
         }
         catch (Microsoft.Data.Sqlite.SqliteException ex) when (ex.SqliteErrorCode == 8)
         {
-            // Ignorer si la connexion est en mode lecture seule (code SQLITE_READONLY = 8)
+            // A read-only connection (SQLITE_READONLY = 8) cannot switch to WAL; it keeps its journal mode
         }
     }
 }

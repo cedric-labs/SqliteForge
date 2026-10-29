@@ -1,36 +1,36 @@
 namespace SqliteForge.Security;
 
 /// <summary>
-/// Contrat du magasin local de persistance sécurisée de la clé ("Se souvenir sur cet appareil").
+/// Local protected store of the key ("Remember on this device").
 /// </summary>
 public interface IDatabaseKeyStore
 {
     /// <summary>
-    /// Récupère la phrase de passe sauvegardée pour cet appareil, ou <c>null</c> si absente ou non déchiffrable.
+    /// Gets the passphrase saved for this device, or <c>null</c> when it is missing or cannot be decrypted.
     /// </summary>
-    /// <param name="cancellationToken">Jeton d'annulation coopérative.</param>
-    /// <returns>La clé déchiffrée ou <c>null</c>.</returns>
+    /// <param name="cancellationToken">Cooperative cancellation token.</param>
+    /// <returns>The decrypted key, or <c>null</c>.</returns>
     Task<string?> GetSavedKeyAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Sauvegarde de manière protégée la phrase de passe sur cet appareil.
+    /// Saves the passphrase on this device in protected form.
     /// </summary>
-    /// <param name="key">Phrase de passe à persister.</param>
-    /// <param name="cancellationToken">Jeton d'annulation coopérative.</param>
-    /// <returns>Tâche asynchrone.</returns>
+    /// <param name="key">Passphrase to save.</param>
+    /// <param name="cancellationToken">Cooperative cancellation token.</param>
+    /// <returns>A task that completes when the passphrase is saved.</returns>
     Task SaveKeyAsync(string key, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Supprime la phrase de passe mémorisée sur cet appareil.
+    /// Deletes the passphrase remembered on this device.
     /// </summary>
-    /// <param name="cancellationToken">Jeton d'annulation coopérative.</param>
-    /// <returns>Tâche asynchrone.</returns>
+    /// <param name="cancellationToken">Cooperative cancellation token.</param>
+    /// <returns>A task that completes when the passphrase is deleted.</returns>
     Task ClearSavedKeyAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Indique si une clé sauvegardée existe sur cet appareil.
+    /// Indicates whether a saved key exists on this device.
     /// </summary>
-    /// <param name="cancellationToken">Jeton d'annulation coopérative.</param>
-    /// <returns><c>true</c> si une clé valide est mémorisée ; sinon, <c>false</c>.</returns>
+    /// <param name="cancellationToken">Cooperative cancellation token.</param>
+    /// <returns><c>true</c> when a valid key is remembered; otherwise <c>false</c>.</returns>
     Task<bool> HasSavedKeyAsync(CancellationToken cancellationToken = default);
 }

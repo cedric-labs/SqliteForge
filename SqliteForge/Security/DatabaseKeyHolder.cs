@@ -1,7 +1,7 @@
 namespace SqliteForge.Security;
 
 /// <summary>
-/// Détenteur singleton thread-safe en mémoire de la clé de déchiffrement SQLite.
+/// Thread-safe singleton that holds the SQLite decryption key in memory.
 /// </summary>
 public class DatabaseKeyHolder : IDatabaseKeyHolder
 {
