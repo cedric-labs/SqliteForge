@@ -15,10 +15,23 @@ public class LocalProtectedFileKeyStore(string? customPath = null, string applic
     private static readonly byte[] Entropy = Encoding.UTF8.GetBytes("Fluxa-Sqlite3MC-DeviceBinding-v1");
     private readonly string _storagePath = !string.IsNullOrEmpty(customPath)
         ? customPath
-        : Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            string.IsNullOrWhiteSpace(applicationName) ? "SqliteForge" : applicationName,
-            "dbkey.dat");
+        : ResolveDefaultStoragePath(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), applicationName, AppContext.BaseDirectory);
+
+    /// <summary>
+    /// Resolves the default key file path.
+    /// </summary>
+    /// <remarks>
+    /// A service account without a home directory gets an empty <c>LocalApplicationData</c>, which would turn the path into a
+    /// relative one that can collide with the application's own files (an executable named like the application folder).
+    /// The key file then sits next to the application, under a name that cannot collide.
+    /// </remarks>
+    internal static string ResolveDefaultStoragePath(string localApplicationData, string applicationName, string baseDirectory) =>
+        string.IsNullOrWhiteSpace(localApplicationData)
+            ? Path.Combine(baseDirectory, "dbkey.dat")
+            : Path.Combine(
+                localApplicationData,
+                string.IsNullOrWhiteSpace(applicationName) ? "SqliteForge" : applicationName,
+                "dbkey.dat");
 
     /// <summary>
     /// Synchronously gets the saved passphrase, or <c>null</c> when it is missing or cannot be decrypted.

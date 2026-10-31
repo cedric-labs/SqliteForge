@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
@@ -68,7 +69,7 @@ public class SqliteDatabaseEncryptionService(
 
         if (rememberOnDevice)
         {
-            await _keyStore.SaveKeyAsync(passphrase, cancellationToken).ConfigureAwait(false);
+            await TryRememberKeyAsync(passphrase, cancellationToken).ConfigureAwait(false);
         }
         else
         {
@@ -309,11 +310,25 @@ public class SqliteDatabaseEncryptionService(
 
         if (isEncrypted && rememberOnDevice && !string.IsNullOrEmpty(targetPassphrase))
         {
-            await _keyStore.SaveKeyAsync(targetPassphrase, cancellationToken).ConfigureAwait(false);
+            await TryRememberKeyAsync(targetPassphrase, cancellationToken).ConfigureAwait(false);
         }
         else
         {
             await _keyStore.ClearSavedKeyAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private async Task TryRememberKeyAsync(string key, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _keyStore.SaveKeyAsync(key, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or CryptographicException)
+        {
+            // The database is already unlocked or re-keyed at this point: a key file that cannot be written (read-only folder,
+            // service account without a home directory) only means the passphrase is asked again at the next start.
+            _logger.LogWarning(ex, "The passphrase could not be remembered on this device; it will be requested again at the next start.");
         }
     }
 

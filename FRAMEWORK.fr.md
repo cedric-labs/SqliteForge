@@ -42,6 +42,7 @@ SqliteForge est la bibliothèque partagée .NET d'infrastructure **SQLite, de co
 - **`IDatabaseKeyStore` / `LocalProtectedFileKeyStore`** :
   - Persistance locale sécurisée de la clé ("Se souvenir sur cet appareil").
   - Utilise `ProtectedData` (DPAPI `DataProtectionScope.CurrentUser`) sous Windows et AES-256 avec vecteur d'initialisation préfixé sous Linux/macOS.
+  - Emplacement par défaut : `LocalApplicationData/<application>/dbkey.dat` ; si `LocalApplicationData` est vide (compte de service sans dossier personnel), `dbkey.dat` est placé dans le dossier de l'application. Une clé impossible à écrire ne fait pas échouer `UnlockDatabaseAsync` ni le changement de clé : un avertissement est journalisé et la phrase de passe est redemandée au prochain démarrage.
 - **`IDatabaseEncryptionService` / `SqliteDatabaseEncryptionService`** :
   - `CheckIfFileEncrypted(string filePath)` : Détection statique par inspection des 16 premiers octets (`SQLite format 3\0`).
   - `VerifyPassphrase(string baseConnectionString, string passphrase)` : Vérification de la clé via `SELECT COUNT(*) FROM sqlite_master;`.

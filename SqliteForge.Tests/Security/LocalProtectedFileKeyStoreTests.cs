@@ -174,4 +174,24 @@ public sealed class LocalProtectedFileKeyStoreTests : IDisposable
 
         act.Should().Throw<CryptographicException>();
     }
+
+    [Fact]
+    public void ResolveDefaultStoragePath_WhenLocalApplicationDataIsEmpty_FallsBackToBaseDirectory()
+    {
+        var baseDirectory = Path.Combine(Path.GetTempPath(), "app");
+
+        var path = LocalProtectedFileKeyStore.ResolveDefaultStoragePath(string.Empty, "Cadran", baseDirectory);
+
+        path.Should().Be(Path.Combine(baseDirectory, "dbkey.dat"));
+    }
+
+    [Fact]
+    public void ResolveDefaultStoragePath_WhenLocalApplicationDataIsKnown_UsesApplicationSubfolder()
+    {
+        var localData = Path.Combine(Path.GetTempPath(), "local");
+
+        var path = LocalProtectedFileKeyStore.ResolveDefaultStoragePath(localData, "Cadran", Path.GetTempPath());
+
+        path.Should().Be(Path.Combine(localData, "Cadran", "dbkey.dat"));
+    }
 }

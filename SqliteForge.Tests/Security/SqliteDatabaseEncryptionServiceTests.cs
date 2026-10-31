@@ -184,4 +184,39 @@ public sealed class SqliteDatabaseEncryptionServiceTests : IDisposable
         var unlockEmpty = await _service.UnlockDatabaseAsync("   ", false);
         unlockEmpty.Should().BeFalse();
     }
+
+    [Fact]
+    public async Task UnlockDatabaseAsync_WhenRememberedKeyCannotBeSaved_StillUnlocksTheDatabase()
+    {
+        await using (var conn = new SqliteConnection(_connectionString))
+        {
+            await conn.OpenAsync();
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = "CREATE TABLE Users (Id INT, Name TEXT);";
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        SqliteConnection.ClearAllPools();
+        const string passphrase = "MasterPassphrase123!";
+        (await _service.EncryptDatabaseAsync(passphrase, rememberOnDevice: false)).Success.Should().BeTrue();
+        _keyHolder.SetKey(null, isEncrypted: true);
+
+        var blockingFile = Path.Combine(Path.GetTempPath(), $"sqliteforge_blocker_{Guid.NewGuid():N}");
+        await File.WriteAllTextAsync(blockingFile, "not a directory");
+        try
+        {
+            var unwritableStore = new LocalProtectedFileKeyStore(Path.Combine(blockingFile, "sub", "dbkey.dat"));
+            var service = new SqliteDatabaseEncryptionService(
+                _connectionProvider, _keyHolder, unwritableStore, _serviceProvider, NullLogger.Instance);
+
+            var unlocked = await service.UnlockDatabaseAsync(passphrase, rememberOnDevice: true);
+
+            unlocked.Should().BeTrue();
+            service.IsDatabaseLocked().Should().BeFalse();
+        }
+        finally
+        {
+            File.Delete(blockingFile);
+        }
+    }
 }
